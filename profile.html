@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Profile</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .user-profile {
+            max-width: 600px;
+            margin: 40px auto;
+            padding: 20px;
+            background-color: #f7f7f7;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .cover-photo {
+            width: 100%;
+            height: 150px;
+            border-radius: 10px 10px 0 0;
+            overflow: hidden;
+        }
+        
+        .cover-photo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .profile-picture {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            overflow: hidden;
+            margin: -50px auto 0;
+        }
+        
+        .profile-picture img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .user-info {
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .user-info h2 {
+            font-weight: bold;
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+        
+        .edit-button {
+            margin-top: 20px;
+            text-align: center;
+        }
+        
+        .edit-button button {
+            background-color: #4CAF50;
+            color: #fff;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        
+        .edit-form {
+            padding: 20px;
+        }
+        
+    
+        .edit-form label {
+            display: block;
+            margin-bottom: 10px;
+        }
+            
+        .edit-form input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+            
+        .edit-form button {
+            background-color: #4CAF50;
+            color: #fff;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+            
+        .user-profile {
+            position: relative;
+        }
+            
+        .cover-photo {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 150px;
+            border-radius: 10px 10px 0 0;
+            overflow: hidden;
+        }
+            
+        .profile-picture {
+            position: absolute;
+            top: 100px;
+            left: 20px;
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            overflow: hidden;
+        }
+            
+        .user-info {
+            padding-top: 200px;
+            text-align: center;
+        }
+            
+        .edit-button {
+            margin-top: 20px;
+            text-align: center;
+        }
+            
+        .edit-form {
+            display: none;
+            padding: 20px;
+            position: absolute;
+            top: 250px;
+            left: 20px;
+            width: 80%;
+            background-color: #f7f7f7;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        
+    </style>
+</head>
+<body>
+    <div class="user-profile">
+        <div class="cover-photo">
+            <input type="file" id="cover-picture" name="cover-picture">
+            <img src="cover-photo.jpg" alt="Cover Photo">
+        </div>
+        <div class="profile-picture">
+            <input type="file" id="profile-picture" name="profile-picture">
+            <img src="profile-picture.jpg" alt="Profile Picture">
+        </div>
+        <div class="user-info">
+            <h2 id="name">John Doe</h2>
+            <p id="email">johndoe@example.com</p>
+            <p id="phone">123-456-7890</p>
+        </div>
+        <div class="edit-button">
+            <button id="edit-button">Edit Profile</button>
+        </div>
+        <div class="edit-form">
+            <form id="edit-form">
+                <label for="name-input">Name:</label>
+                <input type="text" id="name-input" name="name"><br><br>
+                <label for="email-input">Email:</label>
+                <input type="email" id="email-input" name="email"><br><br>
+                <label for="phone-input">Phone:</label>
+                <input type="text" id="phone-input" name="phone"><br><br>
+                <button id="save-button">Save Changes</button>
+            </form>
+        </div>
+    </div>
+    <script src="script.js"></script>
+    <script>
+        const editButton = document.getElementById('edit-button');
+        const editForm = document.querySelector('.edit-form');
+        const saveButton = document.getElementById('save-button');
+        const nameInput = document.getElementById('name-input');
+        const emailInput = document.getElementById('email-input');
+        const phoneInput = document.getElementById('phone-input');
+        const nameElement = document.getElementById('name');
+        const emailElement = document.getElementById('email');
+        const phoneElement = document.getElementById('phone');
+
+        editButton.addEventListener('click', () => {
+            editForm.style.display = 'block';
+            nameInput.value = nameElement.textContent;
+            emailInput.value = emailElement.textContent;
+            phoneInput.value = phoneElement.textContent;
+        });
+
+        saveButton.addEventListener('click', (e) => {
+            e.preventDefault();
+            const formData = new FormData(editForm);
+            fetch('/update-profile', {
+                method: 'POST',
+                body: formData,
+            })
+            .then((res) => res.json())
+            .then((data) => {
+                nameElement.textContent = data.name;
+                emailElement.textContent = data.email;
+                phoneElement.textContent = data.phone;
+                editForm.style.display = 'none';
+                alert('Profile updated successfully!');
+            })
+            .catch((err) => {
+                console.error(err);
+                alert('Error updating profile. Please try again.');
+            });
+        });
+
+
+    </script>
+</body>
+</html>

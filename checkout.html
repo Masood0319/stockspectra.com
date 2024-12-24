@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Card Payment</title>
+  <script src="https://js.stripe.com/v3/"></script>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f7f7f7;
+      padding-top: 50px;
+    }
+
+    #payment-form {
+      max-width: 500px;
+      margin: 0 auto;
+      padding: 30px;
+      background-color: white;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    .payment-header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    #card-element {
+      margin-bottom: 20px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      padding: 10px;
+    }
+
+    #card-element.StripeElement--focus {
+      border-color: #007bff;
+    }
+
+    #card-element.StripeElement--invalid {
+      border-color: #e3342f;
+    }
+
+    #payment-form button {
+      width: 100%;
+      height: 45px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    #payment-form button:disabled {
+      background-color: #cccccc;
+    }
+
+    .message {
+      margin-top: 15px;
+      color: red;
+      font-size: 14px;
+    }
+
+    .success-message {
+      color: green;
+      display: none;
+      font-size: 16px;
+      text-align: center;
+      margin-top: 15px;
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid #fff;
+      border-top: 3px solid #007bff;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-left: 10px;
+    }
+
+    @keyframes spin {
+      0% {
+        transform: rotate(0deg);
+      }
+
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="payment-form">
+    <h3 class="payment-header">Pay with Card</h3>
+    <div id="card-element"></div>
+    <button id="submit-button" disabled>
+      Pay
+    </button>
+    <div id="payment-message" class="message"></div>
+    <div id="success-message" class="success-message"></div>
+  </div>
+
+  <script>
+    const stripe = Stripe('YOUR_PUBLIC_KEY'); // Replace with your actual Stripe public key
+    const elements = stripe.elements();
+    const card = elements.create('card', {
+      style: {
+        base: {
+          fontSize: '16px',
+          color: '#32325d',
+        },
+      },
+    });
+    card.mount('#card-element');
+
+    const submitButton = document.getElementById('submit-button');
+    const paymentMessage = document.getElementById('payment-message');
+    const successMessage = document.getElementById('success-message');
+
+    // Enable/Disable the submit button based on card input validity
+    card.on('change', (event) => {
+      paymentMessage.textContent = ''; // Clear previous error messages
+      submitButton.disabled = !event.complete;
+    });
+
+    document.querySelector('#payment-form').addEventListener('submit', async (event) => {
+      event.preventDefault();
+
+      paymentMessage.textContent = ''; // Clear previous messages
+      successMessage.style.display = 'none';
+
+      submitButton.disabled = true;
+      submitButton.textContent = 'Processing...';
+      const spinner = document.createElement('div');
+      spinner.className = 'spinner';
+      submitButton.appendChild(spinner);
+
+      try {
+        const { error, paymentMethod } = await stripe.createPaymentMethod({
+          type: 'card',
+          card: card,
+        });
+
+        if (error) {
+          throw new Error(error.message);
+        }
+
+        const response = await fetch('/create-payment-intent', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ paymentMethodId: paymentMethod.id }),
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          successMessage.style.display = 'block';
+          successMessage.textContent = 'Payment successful!';
+          submitButton.textContent = 'Paid';
+        } else {
+          throw new Error(data.message);
+        }
+      } catch (err) {
+        paymentMessage.style.display = 'block';
+        paymentMessage.textContent = `Error: ${err.message}`;
+        submitButton.disabled = false;
+        submitButton.textContent = 'Pay';
+      } finally {
+        const spinnerElement = document.querySelector('.spinner');
+        if (spinnerElement) {
+          spinnerElement.remove();
+        }
+      }
+    });
+  </script>
+</body>
+
+</html>
